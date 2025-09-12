@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 interface SidebarProps {
-  userRole: "dev" | "admin" | "user";
+  userRole: "dev" | "admin" | "usuario";
   currentPage: string;
   onPageChange: (page: string) => void;
   onLogout: () => void;
@@ -28,10 +28,10 @@ export const Sidebar = ({ userRole, currentPage, onPageChange, onLogout }: Sideb
   const isMobile = useIsMobile();
 
   const menuItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home, roles: ["dev", "admin", "user"] },
-    { id: "calendar", label: "Calendário", icon: Calendar, roles: ["dev", "admin", "user"] },
+    { id: "dashboard", label: "Dashboard", icon: Home, roles: ["dev", "admin", "usuario"] },
+    { id: "calendar", label: "Calendário", icon: Calendar, roles: ["dev", "admin", "usuario"] },
     { id: "users", label: "Usuários", icon: Users, roles: ["dev", "admin"] },
-    { id: "reports", label: "Relatórios", icon: BarChart3, roles: ["dev", "admin", "user"] },
+    { id: "reports", label: "Relatórios", icon: BarChart3, roles: ["dev", "admin", "usuario"] },
     { id: "invoices", label: "Faturas", icon: FileText, roles: ["dev", "admin"] },
     { id: "settings", label: "Configurações", icon: Settings, roles: ["dev"] },
   ];
@@ -49,7 +49,7 @@ export const Sidebar = ({ userRole, currentPage, onPageChange, onLogout }: Sideb
     const roleConfig = {
       dev: { label: "Dev", variant: "default" as const },
       admin: { label: "Admin", variant: "secondary" as const },
-      user: { label: "Usuário", variant: "outline" as const },
+      usuario: { label: "Usuário", variant: "outline" as const },
     };
     return roleConfig[role as keyof typeof roleConfig];
   };

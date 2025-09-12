@@ -1,54 +1,57 @@
-import { useState } from "react";
-import { LoginForm } from "@/components/auth/LoginForm";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Index = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState<"dev" | "admin" | "user">("user");
+  const { user, profile, isLoading } = useAuth();
 
-  const handleLogin = (role: "dev" | "admin" | "user" = "user") => {
-    setUserRole(role);
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setUserRole("user");
-  };
-
-  if (!isAuthenticated) {
+  if (isLoading) {
     return (
-      <div>
-        <LoginForm onLogin={handleLogin} />
-        {/* Botões de teste para diferentes tipos de usuário */}
-        <div className="fixed bottom-4 right-4 space-y-2">
-          <div className="flex flex-col space-y-2 bg-card p-4 rounded-lg border shadow-lg">
-            <p className="text-xs text-muted-foreground text-center">Teste rápido:</p>
-            <button 
-              onClick={() => handleLogin("dev")}
-              className="px-3 py-1 bg-primary text-primary-foreground rounded text-sm"
-            >
-              Login como Dev
-            </button>
-            <button 
-              onClick={() => handleLogin("admin")}
-              className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-sm"
-            >
-              Login como Admin
-            </button>
-            <button 
-              onClick={() => handleLogin("user")}
-              className="px-3 py-1 bg-accent text-accent-foreground rounded text-sm"
-            >
-              Login como Usuário
-            </button>
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando...</p>
         </div>
       </div>
     );
   }
 
-  return <AppLayout userRole={userRole} onLogout={handleLogout} />;
+  if (!user || !profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-gradient-neon rounded-2xl flex items-center justify-center glow-neon">
+              <span className="text-2xl font-bold text-primary-foreground">LM</span>
+            </div>
+            <div>
+              <CardTitle className="text-2xl font-bold">LeMaShows</CardTitle>
+              <CardDescription>
+                Sistema de Gerenciamento de Bandas
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-center text-muted-foreground">
+                Faça login para acessar o sistema
+              </p>
+              <Button 
+                onClick={() => window.location.href = '/auth'} 
+                className="w-full"
+              >
+                Ir para Login
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return <AppLayout />;
 };
 
 export default Index;

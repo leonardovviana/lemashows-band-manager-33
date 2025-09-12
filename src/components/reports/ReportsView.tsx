@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 interface ReportsViewProps {
-  userRole: "dev" | "admin" | "user";
+  userRole: "dev" | "admin" | "usuario";
 }
 
 export const ReportsView = ({ userRole }: ReportsViewProps) => {

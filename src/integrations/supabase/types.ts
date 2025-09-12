@@ -14,16 +14,213 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_logs: {
+        Row: {
+          acao: string
+          criado_em: string
+          detalhes: Json | null
+          id: string
+          usuario_id: string
+        }
+        Insert: {
+          acao: string
+          criado_em?: string
+          detalhes?: Json | null
+          id?: string
+          usuario_id: string
+        }
+        Update: {
+          acao?: string
+          criado_em?: string
+          detalhes?: Json | null
+          id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bands: {
+        Row: {
+          criada_em: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          criada_em?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          criada_em?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      invoices: {
+        Row: {
+          banda_id: string
+          created_at: string
+          data_emissao: string
+          data_vencimento: string
+          id: string
+          status: Database["public"]["Enums"]["invoice_status"]
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          banda_id: string
+          created_at?: string
+          data_emissao?: string
+          data_vencimento: string
+          id?: string
+          status?: Database["public"]["Enums"]["invoice_status"]
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          banda_id?: string
+          created_at?: string
+          data_emissao?: string
+          data_vencimento?: string
+          id?: string
+          status?: Database["public"]["Enums"]["invoice_status"]
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_banda_id_fkey"
+            columns: ["banda_id"]
+            isOneToOne: false
+            referencedRelation: "bands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          banda_id: string | null
+          created_at: string
+          email: string
+          id: string
+          nome: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          banda_id?: string | null
+          created_at?: string
+          email: string
+          id: string
+          nome: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          banda_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          nome?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_banda_id_fkey"
+            columns: ["banda_id"]
+            isOneToOne: false
+            referencedRelation: "bands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shows: {
+        Row: {
+          banda_id: string
+          contato: string | null
+          created_at: string
+          criado_por: string
+          data_show: string
+          id: string
+          local: string
+          observacoes: string | null
+          status: Database["public"]["Enums"]["show_status"]
+          tipo_show: string | null
+          updated_at: string
+          valor: number | null
+        }
+        Insert: {
+          banda_id: string
+          contato?: string | null
+          created_at?: string
+          criado_por: string
+          data_show: string
+          id?: string
+          local: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["show_status"]
+          tipo_show?: string | null
+          updated_at?: string
+          valor?: number | null
+        }
+        Update: {
+          banda_id?: string
+          contato?: string | null
+          created_at?: string
+          criado_por?: string
+          data_show?: string
+          id?: string
+          local?: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["show_status"]
+          tipo_show?: string | null
+          updated_at?: string
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shows_banda_id_fkey"
+            columns: ["banda_id"]
+            isOneToOne: false
+            referencedRelation: "bands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shows_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_band: {
+        Args: { user_uuid: string }
+        Returns: string
+      }
+      get_user_role: {
+        Args: { user_uuid: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
     }
     Enums: {
-      [_ in never]: never
+      invoice_status: "pago" | "pendente" | "atrasado"
+      show_status: "ativo" | "cancelado"
+      user_role: "dev" | "admin" | "usuario"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +347,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      invoice_status: ["pago", "pendente", "atrasado"],
+      show_status: ["ativo", "cancelado"],
+      user_role: ["dev", "admin", "usuario"],
+    },
   },
 } as const

@@ -16,7 +16,7 @@ import { Calendar, MapPin, Clock, DollarSign, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface NewShowDialogProps {
-  userRole: "dev" | "admin" | "user";
+  userRole: "dev" | "admin" | "usuario";
 }
 
 export const NewShowDialog = ({ userRole }: NewShowDialogProps) => {

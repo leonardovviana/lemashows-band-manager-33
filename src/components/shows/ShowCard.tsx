@@ -28,10 +28,10 @@ interface ShowCardProps {
     createdBy: {
       name: string;
       avatar?: string;
-      role: "dev" | "admin" | "user";
+      role: "dev" | "admin" | "usuario";
     };
   };
-  userRole: "dev" | "admin" | "user";
+  userRole: "dev" | "admin" | "usuario";
   onEdit?: (showId: number) => void;
   onDelete?: (showId: number) => void;
   onView?: (showId: number) => void;
@@ -50,9 +50,9 @@ export const ShowCard = ({ show, userRole, onEdit, onDelete, onView }: ShowCardP
     const colors = {
       dev: "bg-primary text-primary-foreground",
       admin: "bg-secondary text-secondary-foreground", 
-      user: "bg-accent text-accent-foreground"
+      usuario: "bg-accent text-accent-foreground"
     };
-    return colors[role as keyof typeof colors] || colors.user;
+    return colors[role as keyof typeof colors] || colors.usuario;
   };
 
   return (

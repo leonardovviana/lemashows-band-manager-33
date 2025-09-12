@@ -36,13 +36,13 @@ interface ShowDetailsDialogProps {
     createdBy: {
       name: string;
       avatar?: string;
-      role: "dev" | "admin" | "user";
+      role: "dev" | "admin" | "usuario";
     };
     createdAt?: string;
   } | null;
   isOpen: boolean;
   onClose: () => void;
-  userRole: "dev" | "admin" | "user";
+  userRole: "dev" | "admin" | "usuario";
   onEdit?: (showId: number) => void;
   onDelete?: (showId: number) => void;
   onStatusChange?: (showId: number, status: "confirmado" | "cancelado") => void;
@@ -88,7 +88,7 @@ export const ShowDetailsDialog = ({
     const roleLabels = {
       dev: "Desenvolvedor",
       admin: "Administrador",
-      user: "Usuário"
+      usuario: "Usuário"
     };
     return roleLabels[role as keyof typeof roleLabels] || "Usuário";
   };

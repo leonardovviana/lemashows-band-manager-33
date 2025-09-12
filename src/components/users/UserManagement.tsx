@@ -41,7 +41,7 @@ export const UserManagement = ({ userRole }: UserManagementProps) => {
       name: "Maria Santos", 
       email: "maria@lemashows.com",
       phone: "(11) 88888-8888",
-      role: "user",
+      role: "usuario",
       band: "Banda Rock City",
       joinDate: "2023-03-20",
       status: "ativo",
@@ -52,7 +52,7 @@ export const UserManagement = ({ userRole }: UserManagementProps) => {
       name: "Pedro Oliveira",
       email: "pedro@lemashows.com", 
       phone: "(11) 77777-7777",
-      role: "user",
+      role: "usuario",
       band: "Banda Rock City",
       joinDate: "2023-06-10",
       status: "inativo",
@@ -83,7 +83,7 @@ export const UserManagement = ({ userRole }: UserManagementProps) => {
     const roleConfig = {
       dev: { label: "Dev", variant: "default" as const },
       admin: { label: "Admin", variant: "secondary" as const },
-      user: { label: "Usuário", variant: "outline" as const },
+      usuario: { label: "Usuário", variant: "outline" as const },
     };
     return roleConfig[role as keyof typeof roleConfig];
   };
@@ -159,7 +159,7 @@ export const UserManagement = ({ userRole }: UserManagementProps) => {
             <div className="flex items-center space-x-2">
               <User className="h-4 w-4 text-primary" />
               <div>
-                <p className="text-2xl font-bold">{users.filter(u => u.role === 'user').length}</p>
+                <p className="text-2xl font-bold">{users.filter(u => u.role === 'usuario').length}</p>
                 <p className="text-xs text-muted-foreground">Usuários</p>
               </div>
             </div>

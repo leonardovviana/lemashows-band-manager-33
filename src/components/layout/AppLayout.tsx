@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   Calendar, 
   Music, 
@@ -21,12 +22,8 @@ import {
   Eye
 } from "lucide-react";
 
-interface AppLayoutProps {
-  userRole: "dev" | "admin" | "user";
-  onLogout: () => void;
-}
-
-export const AppLayout = ({ userRole, onLogout }: AppLayoutProps) => {
+export const AppLayout = () => {
+  const { profile, signOut } = useAuth();
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [selectedShow, setSelectedShow] = useState<any>(null);
   const [showDetailsOpen, setShowDetailsOpen] = useState(false);
@@ -83,7 +80,7 @@ export const AppLayout = ({ userRole, onLogout }: AppLayoutProps) => {
         createdBy: {
           name: "Pedro Costa",
           avatar: "/placeholder-avatar.jpg",
-          role: "user" as const
+          role: "usuario" as const
         },
         createdAt: "2024-01-10"
       }
@@ -137,7 +134,7 @@ export const AppLayout = ({ userRole, onLogout }: AppLayoutProps) => {
           
           {/* Mobile-first: Agendar Show button prominente */}
           <div className="w-full">
-            <NewShowDialog userRole={userRole} />
+            <NewShowDialog userRole={profile?.role || "usuario"} />
           </div>
         </div>
 
@@ -162,7 +159,7 @@ export const AppLayout = ({ userRole, onLogout }: AppLayoutProps) => {
               <ShowCard
                 key={show.id}
                 show={show}
-                userRole={userRole}
+                userRole={profile?.role || "usuario"}
                 onView={handleShowView}
                 onEdit={handleShowEdit}
                 onDelete={handleShowDelete}
@@ -239,7 +236,7 @@ export const AppLayout = ({ userRole, onLogout }: AppLayoutProps) => {
           show={selectedShow}
           isOpen={showDetailsOpen}
           onClose={() => setShowDetailsOpen(false)}
-          userRole={userRole}
+          userRole={profile?.role || "usuario"}
           onEdit={handleShowEdit}
           onDelete={handleShowDelete}
           onStatusChange={handleStatusChange}
@@ -253,13 +250,13 @@ export const AppLayout = ({ userRole, onLogout }: AppLayoutProps) => {
       case "dashboard":
         return <DashboardView />;
       case "calendar":
-        return <CalendarView userRole={userRole} />;
-      case "users":
-        return userRole !== "user" ? <UserManagement userRole={userRole as "dev" | "admin"} /> : <div>Acesso negado</div>;
+        return <CalendarView userRole={profile?.role || "usuario"} />;
+        case "users":
+        return profile?.role !== "usuario" ? <UserManagement userRole={profile?.role as "dev" | "admin"} /> : <div>Acesso negado</div>;
       case "reports":
-        return <ReportsView userRole={userRole} />;
+        return <ReportsView userRole={profile?.role || "usuario"} />;
       case "invoices":
-        return userRole !== "user" ? (
+        return profile?.role !== "usuario" ? (
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-bold">Faturas</h1>
@@ -273,7 +270,7 @@ export const AppLayout = ({ userRole, onLogout }: AppLayoutProps) => {
           </div>
         ) : <div>Acesso negado</div>;
       case "settings":
-        return userRole === "dev" ? (
+        return profile?.role === "dev" ? (
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-bold">Configurações do Sistema</h1>
@@ -294,10 +291,10 @@ export const AppLayout = ({ userRole, onLogout }: AppLayoutProps) => {
   return (
     <div className="flex min-h-screen bg-gradient-subtle">
       <Sidebar 
-        userRole={userRole}
+        userRole={profile?.role || "usuario"}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
-        onLogout={onLogout}
+        onLogout={signOut}
       />
       
       <main className="flex-1 md:ml-0 p-3 md:p-6 overflow-auto">

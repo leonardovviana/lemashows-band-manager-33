@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 interface CalendarViewProps {
-  userRole: "dev" | "admin" | "user";
+  userRole: "dev" | "admin" | "usuario";
 }
 
 export const CalendarView = ({ userRole }: CalendarViewProps) => {
