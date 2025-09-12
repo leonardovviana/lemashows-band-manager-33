@@ -208,6 +208,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_dev_user: {
+        Args: { user_email: string; user_name?: string }
+        Returns: undefined
+      }
       get_user_band: {
         Args: { user_uuid: string }
         Returns: string
