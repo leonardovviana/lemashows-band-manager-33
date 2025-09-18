@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - LeMaShows</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p class="text-muted-foreground">Carregando...</p>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app-container" class="app-container hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <!-- Mobile Toggle -->
+            <button id="mobile-toggle" class="mobile-toggle md:hidden">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+
+            <div class="sidebar-content">
+                <!-- Sidebar Header -->
+                <div class="sidebar-header">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-neon rounded-xl flex items-center justify-center glow-neon">
+                            <span class="text-lg font-bold text-primary-foreground">LM</span>
+                        </div>
+                        <div class="sidebar-title">
+                            <h2 class="text-lg font-semibold">LeMaShows</h2>
+                            <p class="text-xs text-muted-foreground">Gerenciamento</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Info -->
+                <div id="user-info" class="user-info">
+                    <div class="user-avatar">
+                        <span id="user-initials" class="user-initials">U</span>
+                    </div>
+                    <div class="user-details">
+                        <p id="user-name" class="user-name">Carregando...</p>
+                        <span id="user-role" class="user-role"></span>
+                    </div>
+                </div>
+
+                <!-- Navigation Menu -->
+                <nav class="sidebar-nav">
+                    <ul class="nav-list">
+                        <li>
+                            <button class="nav-item active" data-page="dashboard">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m8 6 4-4 4 4"></path>
+                                </svg>
+                                Dashboard
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item" data-page="calendar">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                Calendário
+                            </button>
+                        </li>
+                        <li id="users-nav" class="hidden">
+                            <button class="nav-item" data-page="users">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path>
+                                </svg>
+                                Usuários
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item" data-page="reports">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                Relatórios
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- Logout Button -->
+                <button id="logout-btn" class="logout-btn">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    Sair
+                </button>
+            </div>
+        </aside>
+
+        <!-- Mobile Overlay -->
+        <div id="mobile-overlay" class="mobile-overlay hidden"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Content will be dynamically loaded here -->
+            <div id="page-content">
+                <!-- Dashboard content will be loaded here by default -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Modals Container -->
+    <div id="modals-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/components/dashboard.js"></script>
+    <script src="js/components/calendar.js"></script>
+    <script src="js/components/users.js"></script>
+    <script src="js/components/reports.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

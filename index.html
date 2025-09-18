@@ -1,24 +1,57 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LeMaShows - Sistema de Gerenciamento de Bandas</title>
-    <meta name="description" content="Sistema interno para gerenciamento de bandas e shows - LeMaShows" />
-    <meta name="author" content="Lovable" />
+    <meta name="description" content="Sistema interno para gerenciamento de bandas e shows - LeMaShows">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
+        <div class="card w-full max-w-md">
+            <div class="card-header text-center space-y-4">
+                <div class="mx-auto w-16 h-16 bg-gradient-neon rounded-2xl flex items-center justify-center glow-neon">
+                    <span class="text-2xl font-bold text-primary-foreground">LM</span>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold">LeMaShows</h1>
+                    <p class="text-muted-foreground">
+                        Sistema de Gerenciamento de Bandas
+                    </p>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="space-y-4">
+                    <p class="text-center text-muted-foreground">
+                        Faça login para acessar o sistema
+                    </p>
+                    <button onclick="window.location.href = 'auth.html'" class="btn btn-primary w-full">
+                        Ir para Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <meta property="og:title" content="24d2340a-b1e6-41a3-bf6d-b301f3a7ea41" />
-    <meta property="og:description" content="Lovable Generated Project" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-spinner">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p class="text-muted-foreground">Carregando...</p>
+        </div>
+    </div>
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-  </head>
-
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script>
+        // Check if user is already authenticated
+        document.addEventListener('DOMContentLoaded', async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                window.location.href = 'app.html';
+            }
+        });
+    </script>
+</body>
 </html>
