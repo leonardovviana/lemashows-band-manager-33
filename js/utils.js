@@ -172,12 +172,27 @@ function closeModal(element) {
 }
 
 // Loading utilities
-function showLoading() {
-  document.getElementById('loading-overlay').classList.remove('hidden');
+function showLoading(message = 'Carregando...') {
+  let overlay = document.getElementById('dynamic-loading-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'dynamic-loading-overlay';
+    overlay.className = 'loading-overlay';
+    overlay.innerHTML = `
+      <div class="loading-spinner">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p class="text-muted-foreground" id="dynamic-loading-text"></p>
+      </div>`;
+    document.body.appendChild(overlay);
+  }
+  const text = overlay.querySelector('#dynamic-loading-text');
+  if (text) text.textContent = message;
+  overlay.style.display = 'flex';
 }
 
 function hideLoading() {
-  document.getElementById('loading-overlay').classList.add('hidden');
+  const overlay = document.getElementById('dynamic-loading-overlay');
+  if (overlay) overlay.style.display = 'none';
 }
 
 // Generate unique ID
@@ -212,6 +227,27 @@ function canManageShows(userRole) {
   return ['dev', 'admin'].includes(userRole);
 }
 
+// Permission helpers centralizados
+function canInviteUsers(currentProfile) {
+  if (!currentProfile) return false;
+  return currentProfile.role === 'dev' || currentProfile.role === 'admin';
+}
+
+function canEditUser(currentProfile, targetUser) {
+  if (!currentProfile || !targetUser) return false;
+  if (currentProfile.role === 'dev') return true;
+  if (currentProfile.role === 'admin') {
+    // Admin só pode editar usuarios da mesma banda e não pode editar dev/admin
+    return targetUser.role === 'usuario' && targetUser.banda_id === currentProfile.banda_id;
+  }
+  return false;
+}
+
+function canDeleteUser(currentProfile, targetUser) {
+  // Mesma regra de edição (poderíamos diferenciar se necessário)
+  return canEditUser(currentProfile, targetUser);
+}
+
 // Export functions for use in other files
 window.utils = {
   showToast,
@@ -234,5 +270,8 @@ window.utils = {
   capitalize,
   getCurrentDate,
   getCurrentTime,
-  canManageShows
+  canManageShows,
+  canInviteUsers,
+  canEditUser,
+  canDeleteUser
 };

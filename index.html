@@ -1,57 +1,85 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LeMaShows - Sistema de Gerenciamento de Bandas</title>
-    <meta name="description" content="Sistema interno para gerenciamento de bandas e shows - LeMaShows">
-    <link rel="stylesheet" href="css/styles.css">
+    <meta name="description" content="Sistema interno para gerenciamento de bandas e shows - LeMaShows" />
+    <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-    <div class="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
-        <div class="card w-full max-w-md">
-            <div class="card-header text-center space-y-4">
-                <div class="mx-auto w-16 h-16 bg-gradient-neon rounded-2xl flex items-center justify-center glow-neon">
-                    <span class="text-2xl font-bold text-primary-foreground">LM</span>
+        <!-- Overlay removido; agora criado dinamicamente por utils.showLoading() -->
+
+    <!-- Root (login ou outras telas iniciais) -->
+    <div id="root"></div>
+
+    <!-- Main App Container (inicialmente oculto, mostrado após login) -->
+    <div id="app-container" class="app-container hidden">
+        <aside id="sidebar" class="sidebar">
+                    <button id="mobile-toggle" class="mobile-toggle md:hidden" aria-label="Abrir menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+            <div class="sidebar-content">
+                <div class="sidebar-header">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-neon rounded-xl flex items-center justify-center glow-neon">
+                            <span class="text-lg font-bold text-primary-foreground">LM</span>
+                        </div>
+                        <div class="sidebar-title">
+                            <h2 class="text-lg font-semibold">LeMaShows</h2>
+                            <p class="text-xs text-muted-foreground">Gerenciamento</p>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-2xl font-bold">LeMaShows</h1>
-                    <p class="text-muted-foreground">
-                        Sistema de Gerenciamento de Bandas
-                    </p>
+                <div id="user-info" class="user-info">
+                    <div class="user-avatar"><span id="user-initials" class="user-initials">U</span></div>
+                    <div class="user-details">
+                        <p id="user-name" class="user-name">Carregando...</p>
+                        <span id="user-role" class="user-role"></span>
+                        <p id="user-band" class="user-band text-xs text-muted-foreground" style="margin-top:2px; display:none;"></p>
+                    </div>
                 </div>
+                <nav class="sidebar-nav">
+                    <ul class="nav-list">
+                        <li><button class="nav-item active" data-page="dashboard">Dashboard</button></li>
+                        <li><button class="nav-item" data-page="calendar">Calendário</button></li>
+                        <li id="users-nav" class="hidden"><button class="nav-item" data-page="users">Usuários</button></li>
+                        <li><button class="nav-item" data-page="reports">Relatórios</button></li>
+                    </ul>
+                </nav>
+                <button id="logout-btn" class="logout-btn">Sair</button>
             </div>
-            <div class="card-content">
-                <div class="space-y-4">
-                    <p class="text-center text-muted-foreground">
-                        Faça login para acessar o sistema
-                    </p>
-                    <button onclick="window.location.href = 'auth.html'" class="btn btn-primary w-full">
-                        Ir para Login
-                    </button>
-                </div>
-            </div>
-        </div>
+        </aside>
+        <div id="mobile-overlay" class="mobile-overlay hidden"></div>
+        <main class="main-content"><div id="page-content"></div></main>
     </div>
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay hidden">
-        <div class="loading-spinner">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p class="text-muted-foreground">Carregando...</p>
-        </div>
-    </div>
+    <!-- Toast -->
+    <div id="toast-container" class="toast-container"></div>
+    <!-- Modals -->
+    <div id="modals-container"></div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
-    <script>
-        // Check if user is already authenticated
-        document.addEventListener('DOMContentLoaded', async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                window.location.href = 'app.html';
-            }
-        });
-    </script>
+    <script src="js/utils.js"></script>
+    <script src="js/components/dashboard.js"></script>
+    <script src="js/components/calendar.js"></script>
+    <script src="js/components/users.js"></script>
+    <script src="js/components/reports.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/main.js"></script>
+            <script>
+                // Fallback: garantir que view de auth apareça mesmo sem sessão
+                setTimeout(() => {
+                    const root = document.getElementById('root');
+                    if (root && !root.innerHTML.trim() && typeof showAuthView === 'function') {
+                        console.log('[fallback] forçando montagem da tela de login');
+                        showAuthView();
+                    }
+                }, 800);
+            </script>
 </body>
 </html>

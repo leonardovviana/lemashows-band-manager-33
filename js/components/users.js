@@ -1,8 +1,19 @@
 // Users component
 window.Users = {
   users: [],
+  filteredUsers: [],
+  showDev: false,
 
   async render(userProfile) {
+    // Fallback de acesso negado (caso chegue aqui incorretamente)
+    if (userProfile?.role === 'usuario') {
+      return `
+        <div class="card p-8 text-center">
+          <h2 class="text-xl font-semibold mb-2">Acesso negado</h2>
+          <p class="text-muted-foreground">Você não tem permissão para visualizar o gerenciamento de usuários.</p>
+        </div>
+      `;
+    }
     return `
       <div class="page-header">
         <div>
@@ -16,7 +27,7 @@ window.Users = {
             </svg>
             Exportar
           </button>
-          ${userProfile?.role === 'dev' ? `
+          ${utils.canInviteUsers(userProfile) ? `
             <button class="btn btn-primary" onclick="Users.openInviteDialog()">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 0.5rem;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -83,6 +94,7 @@ window.Users = {
                 <option value="admin">Administrador</option>
                 <option value="usuario">Usuário</option>
               </select>
+              ${userProfile?.role === 'dev' ? `<button id="toggle-dev-btn" class="btn btn-outline" onclick="Users.toggleDevVisibility()">Mostrar Devs</button>` : ''}
             </div>
           </div>
         </div>
@@ -103,16 +115,25 @@ window.Users = {
 
   async loadUsers() {
     try {
-      const { data: users, error } = await supabase
+      let query = supabase
         .from('profiles')
-        .select(`
-          *,
-          bands (nome)
-        `)
+        .select(`*, bands (nome) `)
         .order('created_at', { ascending: false });
 
+      if (this.userProfile?.role === 'admin') {
+        if (this.userProfile.banda_id) {
+          query = query.eq('banda_id', this.userProfile.banda_id);
+        } else {
+          this.users = [];
+          this.filteredUsers = [];
+          return;
+        }
+      }
+      // dev vê tudo
+      const { data: users, error } = await query;
       if (error) throw error;
       this.users = users || [];
+      this.applyBaseFilter();
       this.renderUsersList();
     } catch (error) {
       console.error('Error loading users:', error);
@@ -120,26 +141,38 @@ window.Users = {
     }
   },
 
+  applyBaseFilter() {
+    this.filteredUsers = this.showDev ? this.users : this.users.filter(u => u.role !== 'dev');
+  },
+
   updateStats() {
-    const totalUsers = this.users.length;
-    const adminUsers = this.users.filter(u => u.role === 'admin' || u.role === 'dev').length;
-    const activeUsers = this.users.filter(u => new Date(u.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length;
-    const todaySignups = this.users.filter(u => {
+    const list = this.filteredUsers;
+    const totalUsers = list.length;
+    const adminUsers = list.filter(u => u.role === 'admin').length; // dev não conta nas stats
+    const activeUsers = list.filter(u => new Date(u.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length;
+    const todaySignups = list.filter(u => {
       const today = new Date().toDateString();
       return new Date(u.created_at).toDateString() === today;
     }).length;
-
-    document.getElementById('total-users').textContent = totalUsers;
-    document.getElementById('admin-users').textContent = adminUsers;
-    document.getElementById('active-users').textContent = activeUsers;
-    document.getElementById('today-signups').textContent = todaySignups;
+    if (document.getElementById('total-users')) document.getElementById('total-users').textContent = totalUsers;
+    if (document.getElementById('admin-users')) document.getElementById('admin-users').textContent = adminUsers;
+    if (document.getElementById('active-users')) document.getElementById('active-users').textContent = activeUsers;
+    if (document.getElementById('today-signups')) document.getElementById('today-signups').textContent = todaySignups;
+  },
+  toggleDevVisibility() {
+    this.showDev = !this.showDev;
+    this.applyBaseFilter();
+    this.renderUsersList();
+    this.updateStats();
+    const btn = document.getElementById('toggle-dev-btn');
+    if (btn) btn.textContent = this.showDev ? 'Ocultar Devs' : 'Mostrar Devs';
   },
 
   renderUsersList() {
     const container = document.getElementById('users-list');
     if (!container) return;
 
-    if (this.users.length === 0) {
+    if (this.filteredUsers.length === 0) {
       container.innerHTML = `
         <div style="text-align: center; padding: 2rem; color: hsl(var(--muted-foreground));">
           <p>Nenhum usuário encontrado</p>
@@ -148,13 +181,13 @@ window.Users = {
       return;
     }
 
-    container.innerHTML = this.users.map(user => this.renderUserCard(user)).join('');
+    container.innerHTML = this.filteredUsers.map(user => this.renderUserCard(user)).join('');
   },
 
   renderUserCard(user) {
-    const roleBadge = utils.getRoleBadge(user.role);
-    const initials = utils.getUserInitials(user.nome);
-    const canManage = this.userProfile?.role === 'dev' || (this.userProfile?.role === 'admin' && user.role === 'usuario');
+  const roleBadge = utils.getRoleBadge(user.role);
+  const initials = utils.getUserInitials(user.nome);
+  const canManage = utils.canEditUser(this.userProfile, user);
 
     return `
       <div class="user-card">
@@ -197,7 +230,7 @@ window.Users = {
   },
 
   filterUsers(searchTerm) {
-    const filteredUsers = this.users.filter(user => 
+    const filteredUsers = this.filteredUsers.filter(user => 
       user.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -207,12 +240,17 @@ window.Users = {
   },
 
   filterByRole(role) {
-    const filteredUsers = role ? this.users.filter(user => user.role === role) : this.users;
+    const base = this.filteredUsers;
+    const filteredUsers = role ? base.filter(user => user.role === role) : base;
     const container = document.getElementById('users-list');
     container.innerHTML = filteredUsers.map(user => this.renderUserCard(user)).join('');
   },
 
   openInviteDialog() {
+    if (!utils.canInviteUsers(this.userProfile)) {
+      utils.showToast('Acesso negado', 'Você não tem permissão para convidar usuários', 'error');
+      return;
+    }
     const modal = utils.createModal(
       'Convidar Usuário',
       `
@@ -230,7 +268,7 @@ window.Users = {
             <select id="invite-role" class="select" required>
               <option value="">Selecione o perfil</option>
               <option value="usuario">Usuário</option>
-              <option value="admin">Administrador</option>
+              ${this.userProfile?.role === 'dev' ? '<option value="admin">Administrador</option>' : ''}
               ${this.userProfile?.role === 'dev' ? '<option value="dev">Desenvolvedor</option>' : ''}
             </select>
           </div>
@@ -250,7 +288,7 @@ window.Users = {
   async inviteUser() {
     const nome = document.getElementById('invite-nome').value;
     const email = document.getElementById('invite-email').value;
-    const role = document.getElementById('invite-role').value;
+  let role = document.getElementById('invite-role').value;
     const password = document.getElementById('invite-password').value;
     
     if (!nome || !email || !role || !password) {
@@ -259,13 +297,33 @@ window.Users = {
     }
     
     try {
-      // In a real implementation, this would be handled by an edge function
-      utils.showToast('Info', 'Funcionalidade de convite será implementada com edge functions', 'info');
+      // Chamada para função edge (precisa existir em /functions/create-user)
+      const session = await window.sb.auth.getSession();
+      const accessToken = session?.data?.session?.access_token;
+      if (!accessToken) throw new Error('Sessão inválida');
+      // Admin não pode criar outra coisa além de usuario
+      if (this.userProfile?.role === 'admin') {
+        role = 'usuario';
+      }
+      const resp = await fetch('/functions/v1/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({ nome, email, role, password })
+      });
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(text || 'Falha ao criar usuário');
+      }
+      utils.showToast('Sucesso', 'Usuário criado com sucesso', 'success');
       utils.closeModal(document.getElementById('invite-user-form'));
-      
+      await this.loadUsers();
+      this.updateStats();
     } catch (error) {
       console.error('Error inviting user:', error);
-      utils.showToast('Erro', 'Erro ao enviar convite', 'error');
+      utils.showToast('Erro', error.message || 'Erro ao enviar convite', 'error');
     }
   },
 

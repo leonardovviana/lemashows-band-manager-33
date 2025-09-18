@@ -4,19 +4,21 @@ let currentUser = null;
 let currentProfile = null;
 let currentPage = 'dashboard';
 
-document.addEventListener('DOMContentLoaded', async () => {
-  await initializeApp();
-});
+// Este arquivo agora expõe initializeApp para ser chamado pelo main unificado
+// Não inicializa automaticamente ao carregar o script.
 
 async function initializeApp() {
   try {
     utils.showLoading();
     
     // Check authentication
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    const { data: { user } } = await window.sb.auth.getUser();
     if (!user) {
-      window.location.href = 'auth.html';
+      // Sem sessão: mostrar view de autenticação (função global definida em main.js)
+      utils.hideLoading();
+      if (typeof showAuthView === 'function') {
+        showAuthView();
+      }
       return;
     }
     
@@ -26,7 +28,7 @@ async function initializeApp() {
     await fetchUserProfile();
     
     // Setup auth listener
-    supabase.auth.onAuthStateChange(async (event, session) => {
+  window.sb.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         window.location.href = 'index.html';
       }
@@ -40,31 +42,53 @@ async function initializeApp() {
     // Load initial page
     await loadPage('dashboard');
     
-    // Show app
-    document.getElementById('app-container').classList.remove('hidden');
+  // Show app e esconder root de login se existir
+  const appContainer = document.getElementById('app-container');
+  if (appContainer) appContainer.classList.remove('hidden');
+  const root = document.getElementById('root');
+  if (root) root.innerHTML = '';
     utils.hideLoading();
     
   } catch (error) {
     console.error('App initialization error:', error);
     utils.showToast('Erro', 'Erro ao carregar aplicação', 'error');
     utils.hideLoading();
+    if (typeof showAuthView === 'function') {
+      showAuthView();
+    }
+  } finally {
+    // overlay dinâmico já tratado por hideLoading
   }
 }
 
 async function fetchUserProfile() {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await window.sb
       .from('profiles')
-      .select('*')
+      .select('*, bands ( nome )')
       .eq('id', currentUser.id)
       .maybeSingle();
     
     if (error) {
       console.error('Error fetching profile:', error);
-      return;
     }
-    
-    currentProfile = data;
+    if (!data) {
+      // Fallback: tentar criar perfil básico caso trigger não tenha rodado ainda
+      try {
+        const email = currentUser.email;
+        const nome = (currentUser.user_metadata && currentUser.user_metadata.nome) || 'Usuário';
+        const insertRes = await window.sb.from('profiles').insert({ id: currentUser.id, email, nome }).select('*').maybeSingle();
+        if (insertRes.error) {
+          console.warn('Falha ao criar perfil fallback:', insertRes.error.message);
+        } else {
+          currentProfile = insertRes.data;
+        }
+      } catch (e) {
+        console.warn('Exceção criando perfil fallback', e);
+      }
+    } else {
+      currentProfile = data;
+    }
   } catch (error) {
     console.error('Error fetching profile:', error);
   }
@@ -107,7 +131,7 @@ function setupNavigation() {
   // Logout
   document.getElementById('logout-btn').addEventListener('click', async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+  const { error } = await window.sb.auth.signOut();
       if (error) {
         utils.showToast('Erro ao sair', error.message, 'error');
       } else {
@@ -129,6 +153,7 @@ function updateUserInfo() {
   const userInitials = document.getElementById('user-initials');
   const userName = document.getElementById('user-name');
   const userRole = document.getElementById('user-role');
+  const userBand = document.getElementById('user-band');
   
   userInitials.textContent = utils.getUserInitials(currentProfile.nome);
   userName.textContent = currentProfile.nome || 'Usuário';
@@ -136,10 +161,23 @@ function updateUserInfo() {
   const roleBadge = utils.getRoleBadge(currentProfile.role);
   userRole.textContent = roleBadge.label;
   userRole.className = `user-role ${roleBadge.class}`;
+
+  if (userBand) {
+    if (currentProfile.role === 'usuario' || currentProfile.role === 'admin') {
+      const bandName = currentProfile.bands?.nome || 'Sem banda';
+      userBand.textContent = bandName;
+      userBand.style.display = 'block';
+    } else {
+      userBand.style.display = 'none';
+    }
+  }
   
   // Show/hide users nav for admins and devs
+  const usersNav = document.getElementById('users-nav');
   if (utils.canManageShows(currentProfile.role)) {
-    document.getElementById('users-nav').classList.remove('hidden');
+    usersNav.classList.remove('hidden');
+  } else {
+    usersNav.classList.add('hidden');
   }
 }
 
@@ -163,6 +201,8 @@ async function loadPage(page) {
           window.Users.init(currentProfile);
         } else {
           utils.showToast('Acesso negado', 'Você não tem permissão para acessar esta página', 'error');
+          // Redirecionar silenciosamente para dashboard
+          setTimeout(() => loadPage('dashboard'), 800);
         }
         break;
       case 'reports':
