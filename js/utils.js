@@ -248,6 +248,25 @@ function canDeleteUser(currentProfile, targetUser) {
   return canEditUser(currentProfile, targetUser);
 }
 
+// Cache simples de bandas (invalidação manual)
+let _bandsCache = { data: null, ts: 0 };
+async function fetchBands(force = false) {
+  const now = Date.now();
+  if (!force && _bandsCache.data && (now - _bandsCache.ts) < 60_000) {
+    return _bandsCache.data;
+  }
+  try {
+    const { data, error } = await window.sb.from('bands').select('id,nome').order('nome');
+    if (error) throw error;
+    _bandsCache = { data: data || [], ts: now };
+    return _bandsCache.data;
+  } catch (e) {
+    console.warn('fetchBands error', e);
+    return [];
+  }
+}
+function invalidateBandsCache() { _bandsCache = { data: null, ts: 0 }; }
+
 // Export functions for use in other files
 window.utils = {
   showToast,
@@ -273,5 +292,7 @@ window.utils = {
   canManageShows,
   canInviteUsers,
   canEditUser,
-  canDeleteUser
+  canDeleteUser,
+  fetchBands,
+  invalidateBandsCache
 };

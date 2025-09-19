@@ -1,6 +1,6 @@
 // Referência do runtime edge Supabase
 // deno-lint-ignore-file no-explicit-any
-import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
+import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 
 // Declaração mínima para editores que não conhecem Deno
 declare const Deno: any;

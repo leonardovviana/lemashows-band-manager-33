@@ -89,6 +89,23 @@ async function fetchUserProfile() {
     } else {
       currentProfile = data;
     }
+
+    // Fallback: garantir que conta desenvolvedor tenha role 'dev' (case-insensitive)
+    try {
+      const DEV_EMAIL = 'adm@lemashows.com.br';
+      if (currentProfile && currentProfile.email && currentProfile.email.toLowerCase() === DEV_EMAIL && currentProfile.role !== 'dev') {
+        console.log('[roles] promovendo conta dev padrão');
+        const { data: updated, error: roleErr } = await window.sb
+          .from('profiles')
+          .update({ role: 'dev' })
+          .eq('id', currentProfile.id)
+          .select('*')
+          .maybeSingle();
+        if (!roleErr && updated) currentProfile = updated;
+      }
+    } catch (e) {
+      console.warn('[roles] falha ao promover conta dev', e);
+    }
   } catch (error) {
     console.error('Error fetching profile:', error);
   }
@@ -145,6 +162,12 @@ function setupNavigation() {
       utils.showToast('Erro', 'Erro ao fazer logout', 'error');
     }
   });
+
+  // Mobile nav availability mirrors sidebar permissions
+  const mobileUsers = document.getElementById('mobile-nav-users');
+  const mobileAdmin = document.getElementById('mobile-nav-admin');
+  if (mobileUsers) mobileUsers.classList.toggle('hidden', !utils.canManageShows(currentProfile?.role));
+  if (mobileAdmin) mobileAdmin.classList.toggle('hidden', currentProfile?.role !== 'dev');
 }
 
 function updateUserInfo() {
@@ -174,10 +197,22 @@ function updateUserInfo() {
   
   // Show/hide users nav for admins and devs
   const usersNav = document.getElementById('users-nav');
+  const adminNav = document.getElementById('admin-nav');
+  const mobileUsers = document.getElementById('mobile-nav-users');
+  const mobileAdmin = document.getElementById('mobile-nav-admin');
   if (utils.canManageShows(currentProfile.role)) {
     usersNav.classList.remove('hidden');
+    if (mobileUsers) mobileUsers.classList.remove('hidden');
   } else {
     usersNav.classList.add('hidden');
+    if (mobileUsers) mobileUsers.classList.add('hidden');
+  }
+  if (currentProfile.role === 'dev') {
+    adminNav.classList.remove('hidden');
+    if (mobileAdmin) mobileAdmin.classList.remove('hidden');
+  } else if (adminNav) {
+    adminNav.classList.add('hidden');
+    if (mobileAdmin) mobileAdmin.classList.add('hidden');
   }
 }
 
@@ -209,9 +244,21 @@ async function loadPage(page) {
         pageContent.innerHTML = await window.Reports.render(currentProfile);
         window.Reports.init(currentProfile);
         break;
+      case 'admin':
+        if (currentProfile.role === 'dev') {
+          pageContent.innerHTML = await window.Admin.render(currentProfile);
+          window.Admin.init(currentProfile);
+        } else {
+          utils.showToast('Acesso negado', 'Área exclusiva do desenvolvedor', 'error');
+          setTimeout(()=>loadPage('dashboard'),600);
+        }
+        break;
       default:
         pageContent.innerHTML = '<div class="text-center p-8"><h2>Página não encontrada</h2></div>';
     }
+    // Atualizar active na bottom nav
+    const mobileNavItems = document.querySelectorAll('#mobile-nav .nav-item');
+    mobileNavItems.forEach(i => i.classList.toggle('active', i.getAttribute('data-page') === page));
   } catch (error) {
     console.error('Error loading page:', error);
     pageContent.innerHTML = '<div class="text-center p-8"><h2>Erro ao carregar página</h2></div>';

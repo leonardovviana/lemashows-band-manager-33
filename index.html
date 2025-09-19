@@ -46,6 +46,7 @@
                         <li><button class="nav-item active" data-page="dashboard">Dashboard</button></li>
                         <li><button class="nav-item" data-page="calendar">Calendário</button></li>
                         <li id="users-nav" class="hidden"><button class="nav-item" data-page="users">Usuários</button></li>
+                        <li id="admin-nav" class="hidden"><button class="nav-item" data-page="admin">Admin</button></li>
                         <li><button class="nav-item" data-page="reports">Relatórios</button></li>
                     </ul>
                 </nav>
@@ -54,6 +55,14 @@
         </aside>
         <div id="mobile-overlay" class="mobile-overlay hidden"></div>
         <main class="main-content"><div id="page-content"></div></main>
+        <!-- Mobile Bottom Navigation -->
+        <nav id="mobile-nav" class="mobile-nav">
+            <button class="nav-item" data-page="dashboard" id="mobile-nav-dashboard">Dashboard</button>
+            <button class="nav-item" data-page="calendar" id="mobile-nav-calendar">Calendário</button>
+            <button class="nav-item hidden" data-page="users" id="mobile-nav-users">Usuários</button>
+            <button class="nav-item hidden" data-page="admin" id="mobile-nav-admin">Admin</button>
+            <button class="nav-item" data-page="reports" id="mobile-nav-reports">Relatórios</button>
+        </nav>
     </div>
 
     <!-- Toast -->
@@ -69,6 +78,7 @@
     <script src="js/components/calendar.js"></script>
     <script src="js/components/users.js"></script>
     <script src="js/components/reports.js"></script>
+    <script src="js/components/admin.js"></script>
     <script src="js/app.js"></script>
     <script src="js/main.js"></script>
             <script>

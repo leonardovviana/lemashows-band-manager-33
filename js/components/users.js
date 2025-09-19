@@ -120,20 +120,22 @@ window.Users = {
         .select(`*, bands (nome) `)
         .order('created_at', { ascending: false });
 
-      if (this.userProfile?.role === 'admin') {
-        if (this.userProfile.banda_id) {
-          query = query.eq('banda_id', this.userProfile.banda_id);
+      if (this.userProfile?.role === 'dev') {
+        const bands = await utils.fetchBands();
+        if (bands.length === 0) {
+          bandSelectHtml = `<p class=\"text-xs text-muted-foreground\">Nenhuma banda cadastrada ainda</p>`;
         } else {
-          this.users = [];
-          this.filteredUsers = [];
-          return;
+          const options = bands.map(b => `<option value=\"${b.id}\" ${user.banda_id === b.id ? 'selected' : ''}>${utils.sanitizeInput(b.nome)}</option>`).join('');
+          bandSelectHtml = `
+            <div class=\"form-group\">
+              <label class=\"form-label\">Banda</label>
+              <select id=\"edit-banda\" class=\"select\">
+                <option value=\"\">Sem banda</option>
+                ${options}
+              </select>
+            </div>`;
         }
       }
-      // dev vê tudo
-      const { data: users, error } = await query;
-      if (error) throw error;
-      this.users = users || [];
-      this.applyBaseFilter();
       this.renderUsersList();
     } catch (error) {
       console.error('Error loading users:', error);
@@ -181,10 +183,23 @@ window.Users = {
       return;
     }
 
-    container.innerHTML = this.filteredUsers.map(user => this.renderUserCard(user)).join('');
+    // Agrupar por banda (inclui 'Sem banda')
+    const groups = {};
+    for (const u of this.filteredUsers) {
+      const key = u.bands?.nome || 'Sem banda';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(u);
+    }
+    const sections = Object.keys(groups).sort((a,b) => a.localeCompare(b, 'pt-BR')).map(bandName => `
+      <section class="band-section">
+        <h3 class="band-title">${utils.sanitizeInput(bandName)} (${groups[bandName].length})</h3>
+        <ul class="list">${groups[bandName].map(u => this.renderUserListItem(u)).join('')}</ul>
+      </section>`).join('');
+    container.innerHTML = sections;
   },
 
   renderUserCard(user) {
+    // Mantido por compatibilidade se for usado em outro lugar
   const roleBadge = utils.getRoleBadge(user.role);
   const initials = utils.getUserInitials(user.nome);
   const canManage = utils.canEditUser(this.userProfile, user);
@@ -229,6 +244,33 @@ window.Users = {
     `;
   },
 
+  renderUserListItem(user) {
+    const roleBadge = utils.getRoleBadge(user.role);
+    const initials = utils.getUserInitials(user.nome);
+    const canManage = utils.canEditUser(this.userProfile, user);
+    return `
+      <li class="list-item">
+        <div class="list-item-avatar">
+          <div class="avatar"><span class="avatar-initials">${initials}</span></div>
+        </div>
+        <div class="list-item-content">
+          <p class="list-item-title">${utils.sanitizeInput(user.nome)}</p>
+          <p class="list-item-subtitle">${utils.sanitizeInput(user.email)}</p>
+          <div class="list-item-meta">
+            <span class="badge badge-${user.role}">${roleBadge.label}</span>
+            ${user.bands ? `<span>${utils.sanitizeInput(user.bands.nome)}</span>` : ''}
+            <span>Cadastro: ${utils.formatDate(user.created_at)}</span>
+          </div>
+        </div>
+        <div class="list-item-actions">
+          ${canManage ? `
+            <button class="btn btn-sm" onclick="Users.editUser('${user.id}')">Editar</button>
+            ${user.role !== 'dev' ? `<button class="btn btn-sm btn-outline" onclick="Users.deleteUser('${user.id}')">Excluir</button>` : ''}
+          ` : ''}
+        </div>
+      </li>`;
+  },
+
   filterUsers(searchTerm) {
     const filteredUsers = this.filteredUsers.filter(user => 
       user.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -236,23 +278,23 @@ window.Users = {
     );
     
     const container = document.getElementById('users-list');
-    container.innerHTML = filteredUsers.map(user => this.renderUserCard(user)).join('');
+    container.innerHTML = `<ul class="list">${filteredUsers.map(user => this.renderUserListItem(user)).join('')}</ul>`;
   },
 
   filterByRole(role) {
     const base = this.filteredUsers;
     const filteredUsers = role ? base.filter(user => user.role === role) : base;
     const container = document.getElementById('users-list');
-    container.innerHTML = filteredUsers.map(user => this.renderUserCard(user)).join('');
+    container.innerHTML = `<ul class="list">${filteredUsers.map(user => this.renderUserListItem(user)).join('')}</ul>`;
   },
 
   openInviteDialog() {
     if (!utils.canInviteUsers(this.userProfile)) {
-      utils.showToast('Acesso negado', 'Você não tem permissão para convidar usuários', 'error');
+      utils.showToast('Acesso negado', 'Você não tem permissão para cadastrar usuários', 'error');
       return;
     }
     const modal = utils.createModal(
-      'Convidar Usuário',
+      'Cadastrar Usuário',
       `
         <form id="invite-user-form" class="form-grid space-y-4">
           <div class="form-group">
@@ -280,7 +322,7 @@ window.Users = {
       `,
       [
         { label: 'Cancelar', class: 'btn-outline', onclick: 'utils.closeModal(this)' },
-        { label: 'Enviar Convite', class: 'btn-primary', onclick: 'Users.inviteUser()' }
+        { label: 'Cadastrar', class: 'btn-primary', onclick: 'Users.inviteUser()' }
       ]
     );
   },
@@ -330,6 +372,22 @@ window.Users = {
   async editUser(userId) {
     const user = this.users.find(u => u.id === userId);
     if (!user) return;
+    // Se dev, carregar bandas para seleção
+    let bandSelectHtml = '';
+    if (this.userProfile?.role === 'dev') {
+      try {
+        const { data: bands } = await window.sb.from('bands').select('id, nome').order('nome');
+        const options = (bands || []).map(b => `<option value="${b.id}" ${user.banda_id === b.id ? 'selected' : ''}>${utils.sanitizeInput(b.nome)}</option>`).join('');
+        bandSelectHtml = `
+          <div class="form-group">
+            <label class="form-label">Banda</label>
+            <select id="edit-banda" class="select">
+              <option value="">Sem banda</option>
+              ${options}
+            </select>
+          </div>`;
+      } catch(e) { console.warn('Falha ao carregar bandas', e); }
+    }
 
     const modal = utils.createModal(
       'Editar Usuário',
@@ -351,6 +409,7 @@ window.Users = {
               ${this.userProfile?.role === 'dev' ? `<option value="dev" ${user.role === 'dev' ? 'selected' : ''}>Desenvolvedor</option>` : ''}
             </select>
           </div>
+          ${bandSelectHtml}
         </form>
       `,
       [
@@ -363,11 +422,18 @@ window.Users = {
   async updateUser(userId) {
     const nome = document.getElementById('edit-nome').value;
     const role = document.getElementById('edit-role').value;
+    let banda_id = null;
+    if (this.userProfile?.role === 'dev') {
+      const bandaEl = document.getElementById('edit-banda');
+      if (bandaEl) banda_id = bandaEl.value || null;
+    }
     
     try {
+      const updateData = { nome, role };
+      if (this.userProfile?.role === 'dev') updateData.banda_id = banda_id;
       const { error } = await supabase
         .from('profiles')
-        .update({ nome, role })
+        .update(updateData)
         .eq('id', userId);
       
       if (error) throw error;
