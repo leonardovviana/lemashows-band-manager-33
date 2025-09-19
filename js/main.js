@@ -45,6 +45,15 @@ function showAuthView() {
   attachAuthHandlers();
   // Garantir que overlay suma
   utils.hideLoading();
+  // Bloquear rolagem no login
+  document.documentElement.classList.add('no-scroll');
+  document.body.classList.add('no-scroll');
+  // Marcar contexto de autenticação (para esconder bottom-nav)
+  document.body.classList.add('auth');
+  // Iniciar background animado do login
+  if (window.LoginBg && typeof window.LoginBg.start === 'function') {
+    window.LoginBg.start();
+  }
 }
 
 // Expor globalmente para uso em app.js
@@ -52,15 +61,14 @@ window.showAuthView = showAuthView;
 
 function getAuthHTML() {
   return `
-  <div class="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
-    <div class="card w-full max-w-md">
+  <div class="min-h-svh flex items-center justify-center bg-carbon p-3 auth">
+    <div class="card w-full max-w-sm">
       <div class="card-header text-center space-y-4">
-        <div class="mx-auto w-16 h-16 bg-gradient-neon rounded-2xl flex items-center justify-center glow-neon">
-          <span class="text-2xl font-bold text-primary-foreground">LM</span>
+        <div class="mx-auto w-32 h-32 rounded-2xl overflow-hidden flex items-center justify-center bg-muted">
+          <img src="img/Soldify.png" alt="Soldify" class="w-full h-full object-contain" />
         </div>
         <div>
-          <h1 class="text-2xl font-bold">LeMaShows</h1>
-          <p class="text-muted-foreground">Sistema de Gerenciamento de Bandas</p>
+          <p class="text-muted-foreground mt-2">Sistema de Gerenciamento de Bandas</p>
         </div>
       </div>
       <div class="card-content">

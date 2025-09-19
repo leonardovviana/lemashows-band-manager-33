@@ -3,8 +3,16 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LeMaShows - Sistema de Gerenciamento de Bandas</title>
-    <meta name="description" content="Sistema interno para gerenciamento de bandas e shows - LeMaShows" />
+    <title>Soldify - Sistema de Gerenciamento de Bandas</title>
+    <meta name="description" content="Sistema interno para gerenciamento de bandas e shows - Soldify" />
+        <script>
+            (function() {
+                try {
+                    var theme = localStorage.getItem('theme') || 'light';
+                    if (theme === 'dark') document.documentElement.classList.add('dark');
+                } catch (e) { /* ignore */ }
+            })();
+        </script>
     <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -24,21 +32,23 @@
             <div class="sidebar-content">
                 <div class="sidebar-header">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gradient-neon rounded-xl flex items-center justify-center glow-neon">
-                            <span class="text-lg font-bold text-primary-foreground">LM</span>
+                        <div class="w-40 h-40 rounded-xl overflow-hidden flex items-center justify-center bg-muted">
+                            <img src="img/Soldify.png" alt="Soldify" class="w-full h-full object-contain" />
                         </div>
                         <div class="sidebar-title">
-                            <h2 class="text-lg font-semibold">LeMaShows</h2>
                             <p class="text-xs text-muted-foreground">Gerenciamento</p>
                         </div>
                     </div>
+                    <button id="theme-toggle-btn" class="btn btn-sm btn-theme-toggle" aria-label="Alternar tema" title="Alternar tema">
+                        🌙 Tema
+                    </button>
                 </div>
                 <div id="user-info" class="user-info">
                     <div class="user-avatar"><span id="user-initials" class="user-initials">U</span></div>
                     <div class="user-details">
                         <p id="user-name" class="user-name">Carregando...</p>
                         <span id="user-role" class="user-role"></span>
-                        <p id="user-band" class="user-band text-xs text-muted-foreground" style="margin-top:2px; display:none;"></p>
+                        <p id="user-band" class="user-band text-xs text-muted-foreground hidden mt-2"></p>
                     </div>
                 </div>
                 <nav class="sidebar-nav">
@@ -81,6 +91,7 @@
     <script src="js/components/admin.js"></script>
     <script src="js/app.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/login-bg.js"></script>
             <script>
                 // Fallback: garantir que view de auth apareça mesmo sem sessão
                 setTimeout(() => {

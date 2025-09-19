@@ -230,11 +230,26 @@ window.Dashboard = {
     `;
   },
 
-  openNewShowDialog() {
+  async openNewShowDialog() {
+    const profile = window.app.getCurrentProfile();
+    const isDev = profile?.role === 'dev';
+    let bandsOptions = '';
+    if (isDev) {
+      const bands = await window.utils.fetchBands(true);
+      bandsOptions = (bands || []).map(b => `<option value=\"${b.id}\">${utils.sanitizeInput(b.nome)}</option>`).join('');
+    }
     const modal = utils.createModal(
       'Novo Show',
       `
         <form id="new-show-form" class="form-grid space-y-4">
+          ${isDev ? `
+          <div class="form-group">
+            <label class="form-label">Banda</label>
+            <select id="show-banda" class="select" required>
+              <option value="">Selecione a banda</option>
+              ${bandsOptions}
+            </select>
+          </div>` : ''}
           <div class="form-grid-cols-2">
             <div class="form-group">
               <label class="form-label">Local do Show</label>
@@ -285,7 +300,8 @@ window.Dashboard = {
     const form = document.getElementById('new-show-form');
     const formData = new FormData(form);
     
-    const local = document.getElementById('show-local').value;
+  const local = document.getElementById('show-local').value;
+  const bandaSelect = document.getElementById('show-banda');
     const tipo = document.getElementById('show-tipo').value;
     const data = document.getElementById('show-data').value;
     const horario = document.getElementById('show-horario').value;
@@ -301,6 +317,14 @@ window.Dashboard = {
     try {
       const currentUser = window.app.getCurrentUser();
       const currentProfile = window.app.getCurrentProfile();
+      let bandaId = currentProfile?.banda_id || null;
+      if (currentProfile?.role === 'dev') {
+        bandaId = bandaSelect ? bandaSelect.value : null;
+      }
+      if (!bandaId) {
+        utils.showToast('Erro', 'Selecione a banda para o show', 'error');
+        return;
+      }
       
       const dataShow = new Date(`${data}T${horario}`).toISOString();
       
@@ -314,7 +338,7 @@ window.Dashboard = {
           contato,
           observacoes,
           criado_por: currentUser.id,
-          banda_id: currentProfile.banda_id,
+          banda_id: bandaId,
           status: 'ativo'
         });
       
@@ -329,7 +353,7 @@ window.Dashboard = {
       
     } catch (error) {
       console.error('Error creating show:', error);
-      utils.showToast('Erro', 'Erro ao criar show', 'error');
+      utils.showToast('Erro', error?.message || 'Erro ao criar show', 'error');
     }
   },
 

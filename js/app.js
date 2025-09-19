@@ -26,6 +26,20 @@ async function initializeApp() {
     
     // Fetch user profile
     await fetchUserProfile();
+
+    // Regra de bloqueio por inadimplência (>7 dias após vencimento)
+    try {
+      if (currentProfile?.banda_id) {
+        const blocked = await window.utils.isBandLoginBlocked(currentProfile.banda_id);
+        if (blocked) {
+          await window.sb.auth.signOut();
+          utils.hideLoading();
+          if (typeof showAuthView === 'function') showAuthView();
+          utils.showToast('Acesso bloqueado', 'Fatura em atraso há mais de 7 dias. Procure o administrador da sua banda.', 'error');
+          return;
+        }
+      }
+    } catch (e) { console.warn('[billing] verificação de bloqueio falhou', e); }
     
     // Setup auth listener
   window.sb.auth.onAuthStateChange(async (event, session) => {
@@ -37,6 +51,7 @@ async function initializeApp() {
     // Initialize UI
     setupSidebar();
     setupNavigation();
+  setupThemeToggle();
     updateUserInfo();
     
     // Load initial page
@@ -47,6 +62,13 @@ async function initializeApp() {
   if (appContainer) appContainer.classList.remove('hidden');
   const root = document.getElementById('root');
   if (root) root.innerHTML = '';
+  // Liberar rolagem: saímos do login
+  document.documentElement.classList.remove('no-scroll');
+  document.body.classList.remove('no-scroll');
+  document.body.classList.remove('auth');
+  if (window.LoginBg && typeof window.LoginBg.stop === 'function') {
+    window.LoginBg.stop();
+  }
     utils.hideLoading();
     
   } catch (error) {
@@ -80,11 +102,16 @@ async function fetchUserProfile() {
         const insertRes = await window.sb.from('profiles').insert({ id: currentUser.id, email, nome }).select('*').maybeSingle();
         if (insertRes.error) {
           console.warn('Falha ao criar perfil fallback:', insertRes.error.message);
+          // fallback mínimo em memória p/ evitar quebra da UI
+          currentProfile = { id: currentUser.id, email, nome, role: 'usuario', banda_id: null };
         } else {
           currentProfile = insertRes.data;
         }
       } catch (e) {
         console.warn('Exceção criando perfil fallback', e);
+        const email = currentUser.email;
+        const nome = (currentUser.user_metadata && currentUser.user_metadata.nome) || 'Usuário';
+        currentProfile = { id: currentUser.id, email, nome, role: 'usuario', banda_id: null };
       }
     } else {
       currentProfile = data;
@@ -168,6 +195,22 @@ function setupNavigation() {
   const mobileAdmin = document.getElementById('mobile-nav-admin');
   if (mobileUsers) mobileUsers.classList.toggle('hidden', !utils.canManageShows(currentProfile?.role));
   if (mobileAdmin) mobileAdmin.classList.toggle('hidden', currentProfile?.role !== 'dev');
+}
+
+function setupThemeToggle() {
+  const btn = document.getElementById('theme-toggle-btn');
+  if (!btn) return;
+  const applyLabel = () => {
+    const isDark = document.documentElement.classList.contains('dark');
+    btn.textContent = isDark ? '☀️ Tema' : '🌙 Tema';
+  };
+  applyLabel();
+  btn.addEventListener('click', () => {
+    const html = document.documentElement;
+    const isDark = html.classList.toggle('dark');
+    try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (_) {}
+    applyLabel();
+  });
 }
 
 function updateUserInfo() {

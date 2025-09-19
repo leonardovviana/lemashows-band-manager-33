@@ -20,17 +20,14 @@ Deno.serve(async (req: Request) => {
     }
 
     const accessToken = auth.replace(/Bearer\s+/i, '');
-    // Validar session para obter user id
-    const projectUrl = Deno.env.get('SUPABASE_URL');
+    // Variáveis de ambiente / fallbacks
+    const projectUrl = Deno.env.get('SUPABASE_URL') || 'https://mvfawaucnnczhyjuupcg.supabase.co';
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!serviceKey || !projectUrl) {
       return new Response(JSON.stringify({ error: 'Configuração de backend ausente' }), { status: 500 });
     }
 
-    const profileRes = await fetch(`${projectUrl}/rest/v1/profiles?select=role&id=eq.auth_uid`, {
-      // Placeholder incorreto — em vez disso vamos decodificar o token via auth endpoint
-    });
-    // Simples: consultar /auth/v1/user
+    // Validar sessão do solicitante
     const userRes = await fetch(`${projectUrl}/auth/v1/user`, {
       headers: { 'Authorization': `Bearer ${accessToken}`, 'apikey': serviceKey }
     });
@@ -50,7 +47,7 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: 'Role inválido' }), { status: 400 });
     }
 
-    // Obter role real do solicitante via profile
+    // Obter role real do solicitante via tabela profiles
     let requesterRole = 'usuario';
     try {
       const profRes = await fetch(`${projectUrl}/rest/v1/profiles?select=role&id=eq.${requester.id}`, {
@@ -93,7 +90,7 @@ Deno.serve(async (req: Request) => {
     const created = await res.json();
 
     // Opcional: inserir/atualizar role / nome na tabela profiles (caso trigger não trate)
-    // Fazemos tentativa silenciosa
+    // Tentativa silenciosa
     try {
       await fetch(`${projectUrl}/rest/v1/profiles`, {
         method: 'PATCH',
@@ -109,6 +106,6 @@ Deno.serve(async (req: Request) => {
 
     return new Response(JSON.stringify({ user: created.user }), { status: 201 });
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: e?.message || 'Erro desconhecido' }), { status: 500 });
+    return new Response(JSON.stringify({ error: e?.message || 'Erro interno' }), { status: 500 });
   }
 });

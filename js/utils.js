@@ -267,6 +267,89 @@ async function fetchBands(force = false) {
 }
 function invalidateBandsCache() { _bandsCache = { data: null, ts: 0 }; }
 
+// ---------- Billing helpers ----------
+const MONTH_NAMES_PT = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+function monthNamePt(mIndex) { return MONTH_NAMES_PT[mIndex] || ''; }
+function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
+function toISODate(d) { return new Date(d).toISOString(); }
+function computeDueDate(year, monthIndex, dayOfMonth) {
+  const d = new Date(Date.UTC(year, monthIndex, 1));
+  const lastDay = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
+  const day = Math.min(dayOfMonth, lastDay);
+  return new Date(Date.UTC(year, monthIndex, day));
+}
+function computeRecentInvoicesFromStart(startDate, count = 3) {
+  if (!startDate) return [];
+  const start = new Date(startDate);
+  const day = start.getUTCDate();
+  const today = new Date();
+  let y = today.getUTCFullYear();
+  let m = today.getUTCMonth();
+  const invoices = [];
+  for (let i = 0; i < count; i++) {
+    const due = computeDueDate(y, m, day);
+    const overdueDays = Math.floor((Date.now() - due.getTime()) / (1000*60*60*24));
+    const status = overdueDays >= 0 ? 'pendente' : 'aguardando';
+    invoices.push({
+      id: `synthetic-${y}-${m+1}`,
+      due_date: toISODate(due),
+      status,
+      month: monthNamePt(m),
+      year: y,
+      amount: null,
+      synthetic: true
+    });
+    // previous month
+    m -= 1; if (m < 0) { m = 11; y -= 1; }
+  }
+  return invoices;
+}
+
+async function fetchBandById(bandId) {
+  try {
+    const { data, error } = await window.sb.from('bands').select('id, nome, criada_em').eq('id', bandId).maybeSingle();
+    if (error) throw error;
+    return data;
+  } catch (e) { return null; }
+}
+
+async function fetchBandInvoices(bandId, fallbackCount = 3) {
+  try {
+    const { data, error } = await window.sb
+      .from('invoices')
+      .select('id, banda_id, data_vencimento, status, valor')
+      .eq('banda_id', bandId)
+      .order('data_vencimento', { ascending: false })
+      .limit(fallbackCount);
+    if (error) throw error;
+    return (data || []).map(row => ({
+      id: row.id,
+      due_date: row.data_vencimento,
+      status: row.status || 'pendente',
+      amount: row.valor ?? null,
+      synthetic: false,
+      month: monthNamePt(new Date(row.data_vencimento).getUTCMonth()),
+      year: new Date(row.data_vencimento).getUTCFullYear()
+    }));
+  } catch (e) {
+    const band = await fetchBandById(bandId);
+    if (!band) return [];
+    return computeRecentInvoicesFromStart(band.criada_em, fallbackCount);
+  }
+}
+
+async function isBandLoginBlocked(bandId) {
+  if (!bandId) return false;
+  // policy: bloqueia se existir fatura pendente vencida há mais de 7 dias
+  const invoices = await fetchBandInvoices(bandId, 6);
+  const now = Date.now();
+  return invoices.some(inv => {
+    if (inv.status && String(inv.status).toLowerCase() === 'pago') return false;
+    const due = new Date(inv.due_date).getTime();
+    return (now - due) > (7 * 24 * 60 * 60 * 1000);
+  });
+}
+
 // Export functions for use in other files
 window.utils = {
   showToast,
@@ -294,5 +377,11 @@ window.utils = {
   canEditUser,
   canDeleteUser,
   fetchBands,
-  invalidateBandsCache
+  invalidateBandsCache,
+  // billing helpers
+  monthNamePt,
+  computeRecentInvoicesFromStart,
+  fetchBandInvoices,
+  fetchBandById,
+  isBandLoginBlocked
 };

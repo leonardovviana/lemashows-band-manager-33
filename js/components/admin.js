@@ -61,6 +61,7 @@ window.Admin = {
     this.renderBands();
     this.renderUsers();
     this.applyFiltersToUI();
+    this.renderBillingForBands();
   },
 
   async refresh() {
@@ -74,7 +75,7 @@ window.Admin = {
 
   async loadBands() {
     try {
-      const { data, error } = await window.sb.from('bands').select('*').order('created_at', { ascending: false });
+      const { data, error } = await window.sb.from('bands').select('*').order('criada_em', { ascending: false });
       if (error) throw error;
       this.bands = data || [];
     } catch (e) {
@@ -115,14 +116,14 @@ window.Admin = {
       return;
     }
     el.innerHTML = `
-      <div class="flex flex-col gap-3">
+      <div class="bands-vertical">
         ${this.bands.map(b => `
-          <div class="flex items-center justify-between border rounded p-3 band-row">
-            <div class="space-y-1">
-              <p class="font-medium">${utils.sanitizeInput(b.nome)}</p>
-              <p class="text-xs text-muted-foreground">ID: ${b.id}</p>
+          <div class="band-item">
+            <div class="min-w-0 flex-1">
+              <p class="band-name">${utils.sanitizeInput(b.nome)}</p>
+              <p class="band-id">ID: ${b.id}</p>
             </div>
-            <div class="flex gap-2">
+            <div class="band-actions">
               <button class="btn btn-sm" onclick="Admin.editBand('${b.id}')">Editar</button>
               <button class="btn btn-sm btn-outline" onclick="Admin.manageBandUsers('${b.id}')">Usuários</button>
               <button class="btn btn-sm destructive" onclick="Admin.deleteBand('${b.id}')">Excluir</button>
@@ -130,6 +131,34 @@ window.Admin = {
           </div>
         `).join('')}
       </div>`;
+  },
+
+  async renderBillingForBands() {
+    const container = document.getElementById('admin-bands-list');
+    if (!container || this.bands.length === 0) return;
+    try {
+      // Render um sumário logo após a lista de bandas
+      const summaries = await Promise.all(this.bands.map(async b => {
+        const invoices = await utils.fetchBandInvoices(b.id, 3);
+        const summary = invoices.map(inv => {
+          const s = String(inv.status).toLowerCase() === 'pago' ? 'Pago' : 'Pendente';
+          return `${inv.month} ${inv.year}: ${s}`;
+        }).join(' • ');
+        return `<li><strong>${utils.sanitizeInput(b.nome)}:</strong> ${summary || 'Sem faturas'}</li>`;
+      }));
+      const html = `
+        <div class="card" style="margin-top:1rem;">
+          <div class="card-header"><h2 class="card-title">Faturas por Banda (últimos meses)</h2></div>
+          <div class="card-content">
+            <ul class="list" style="gap:.25rem;">
+              ${summaries.map(s => `<li class="list-item" style="padding:.5rem 0; border:none; background:transparent;">${s}</li>`).join('')}
+            </ul>
+          </div>
+        </div>`;
+      container.insertAdjacentHTML('afterend', html);
+    } catch (e) {
+      console.warn('[billing] falha ao listar faturas', e);
+    }
   },
 
   renderUsers() {
@@ -268,7 +297,7 @@ window.Admin = {
       if (window.utils?.invalidateBandsCache) window.utils.invalidateBandsCache();
       await this.refresh();
     } catch (e) {
-      console.error(e); utils.showToast('Erro', 'Falha ao criar banda', 'error');
+      console.error(e); utils.showToast('Erro', e?.message || 'Falha ao criar banda', 'error');
     }
   },
 

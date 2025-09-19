@@ -12,7 +12,7 @@ window.Calendar = {
           <p class="page-description">Visualização e gerenciamento de shows</p>
         </div>
         <div class="page-header-actions">
-          <button class="btn btn-outline">
+          <button class="btn btn-outline" onclick="Calendar.exportShows()">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 0.5rem;">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
@@ -181,13 +181,35 @@ window.Calendar = {
   },
 
   renderWeekView() {
-    // Simplified week view
-    return '<div class="text-center p-8"><p>Visualização por semana em desenvolvimento</p></div>';
+    const startOfWeek = new Date(this.currentDate);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const days = Array.from({ length: 7 }, (_, i) => new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + i));
+    const hours = Array.from({ length: 12 }, (_, i) => 10 + i); // 10h às 21h
+    let html = '<div class="week-grid">';
+    html += '<div class="week-grid-header"><div></div>' + days.map(d => `<div class="calendar-day-header">${d.getDate()}/${d.getMonth()+1}</div>`).join('') + '</div>';
+    hours.forEach(h => {
+      html += '<div class="week-grid-row">';
+      html += `<div class="hour-col">${String(h).padStart(2,'0')}:00</div>`;
+      days.forEach(d => {
+        const shows = this.getShowsForDate(d).filter(s => new Date(s.data_show).getHours() === h);
+        html += `<div class="week-cell">${shows.map(s => `<div class=\"calendar-show\"><span class=\"show-time\">${new Date(s.data_show).toTimeString().slice(0,5)}</span> <span class=\"show-title\">${utils.sanitizeInput(s.local)}</span></div>`).join('')}</div>`;
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+    return html;
   },
 
   renderDayView() {
-    // Simplified day view
-    return '<div class="text-center p-8"><p>Visualização por dia em desenvolvimento</p></div>';
+    const hours = Array.from({ length: 14 }, (_, i) => 8 + i); // 08h às 21h
+    const shows = this.getShowsForDate(this.currentDate);
+    let html = '<div class="day-grid">';
+    hours.forEach(h => {
+      const slotShows = shows.filter(s => new Date(s.data_show).getHours() === h);
+      html += `<div class="day-row"><div class="hour-col">${String(h).padStart(2,'0')}:00</div><div class="day-cell">${slotShows.map(s => `<div class=\"calendar-show\"><span class=\"show-time\">${new Date(s.data_show).toTimeString().slice(0,5)}</span> <span class=\"show-title\">${utils.sanitizeInput(s.local)}</span></div>`).join('')}</div></div>`;
+    });
+    html += '</div>';
+    return html;
   },
 
   getShowsForDate(date) {
@@ -307,6 +329,37 @@ window.Calendar = {
   openNewShowDialog() {
     // Reuse the same dialog from Dashboard
     Dashboard.openNewShowDialog();
+  },
+
+  exportShows() {
+    const currentMonth = this.currentDate.getMonth();
+    const currentYear = this.currentDate.getFullYear();
+    const list = this.shows.filter(show => {
+      const d = new Date(show.data_show);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
+    if (!list.length) return utils.showToast('Info', 'Sem shows no período atual', 'info');
+    const headers = ['Data','Hora','Local','Tipo','Valor','Status'];
+    const rows = list.map(s => {
+      const d = new Date(s.data_show);
+      return [
+        utils.formatDate(d),
+        d.toTimeString().slice(0,5),
+        '"'+(s.local||'').replaceAll('"','""')+'"',
+        '"'+(s.tipo_show||'').replaceAll('"','""')+'"',
+        s.valor ?? '',
+        s.status
+      ].join(',');
+    });
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `shows_${currentYear}-${String(currentMonth+1).padStart(2,'0')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    utils.showToast('Sucesso', 'Exportação iniciada', 'success');
   },
 
   async viewShow(showId) {

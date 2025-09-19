@@ -151,8 +151,9 @@ window.Reports = {
   },
 
   calculateStats() {
-    const periodShows = this.getShowsForPeriod();
-    const completedShows = periodShows.filter(show => show.status === 'concluido');
+    const periodShows = this.applyCurrentFilters(this.getShowsForPeriod());
+    const now = new Date();
+    const completedShows = periodShows.filter(show => show.status !== 'cancelado' && new Date(show.data_show) <= now);
     const totalRevenue = completedShows.reduce((sum, show) => sum + (parseFloat(show.valor) || 0), 0);
     const averagePerShow = completedShows.length > 0 ? totalRevenue / completedShows.length : 0;
 
@@ -194,7 +195,7 @@ window.Reports = {
     const container = document.getElementById('shows-history');
     if (!container) return;
 
-    const periodShows = this.getShowsForPeriod();
+    const periodShows = this.applyCurrentFilters(this.getShowsForPeriod());
 
     if (periodShows.length === 0) {
       container.innerHTML = `
@@ -336,6 +337,13 @@ window.Reports = {
   },
 
   applyFilters() {
+    const start = document.getElementById('filter-start-date').value;
+    const end = document.getElementById('filter-end-date').value;
+    const status = document.getElementById('filter-status').value;
+    const minValue = document.getElementById('filter-min-value').value;
+    this._filters = { start, end, status, minValue: minValue ? parseFloat(minValue) : null };
+    this.calculateStats();
+    this.renderShowsHistory();
     utils.showToast('Info', 'Filtros aplicados com sucesso', 'success');
     utils.closeModal(document.getElementById('filter-form'));
   },
@@ -345,9 +353,52 @@ window.Reports = {
     document.getElementById('filter-end-date').value = '';
     document.getElementById('filter-status').value = '';
     document.getElementById('filter-min-value').value = '';
+    this._filters = null;
+    this.calculateStats();
+    this.renderShowsHistory();
   },
 
   exportReport() {
-    utils.showToast('Info', 'Relatório exportado com sucesso', 'success');
+    const list = this.applyCurrentFilters(this.getShowsForPeriod());
+    if (!list.length) return utils.showToast('Info', 'Sem dados no período selecionado', 'info');
+    const headers = ['Data','Hora','Local','Tipo','Valor','Status'];
+    const rows = list.map(s => {
+      const d = new Date(s.data_show);
+      return [
+        utils.formatDate(d),
+        d.toTimeString().slice(0,5),
+        '"'+(s.local||'').replaceAll('"','""')+'"',
+        '"'+(s.tipo_show||'').replaceAll('"','""')+'"',
+        s.valor ?? '',
+        s.status
+      ].join(',');
+    });
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `relatorio_${this.selectedPeriod}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    utils.showToast('Sucesso', 'Exportação iniciada', 'success');
   }
+};
+
+// Helpers internos
+window.Reports.applyCurrentFilters = function(list) {
+  const f = this._filters;
+  if (!f) return list;
+  return list.filter(s => {
+    const d = new Date(s.data_show);
+    if (f.start && d < new Date(f.start)) return false;
+    if (f.end) {
+      const end = new Date(f.end);
+      end.setHours(23,59,59,999);
+      if (d > end) return false;
+    }
+    if (f.status && s.status !== f.status) return false;
+    if (typeof f.minValue === 'number' && (parseFloat(s.valor) || 0) < f.minValue) return false;
+    return true;
+  });
 };
