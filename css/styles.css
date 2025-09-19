@@ -10,9 +10,10 @@
   --card-foreground: 20 14.3% 4.1%;
   --popover: 0 0% 100%;
   --popover-foreground: 20 14.3% 4.1%;
-  --primary: 142.1 76.2% 36.3%;
-  --primary-foreground: 355.7 100% 97.3%;
-  --secondary: 210 40% 94%;
+  /* Deep Blue primary */
+  --primary: 222 85% 45%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 217 32% 92%;
   --secondary-foreground: 222.2 84% 4.9%;
   --muted: 210 40% 96%;
   --muted-foreground: 215.4 16.3% 46.9%;
@@ -22,14 +23,14 @@
   --destructive-foreground: 210 40% 98%;
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
-  --ring: 142.1 76.2% 36.3%;
+  --ring: 222 85% 45%;
   --radius: 0.75rem;
 
-  /* Neon green variations */
-  --neon-green: 142.1 76.2% 36.3%;
-  --neon-green-light: 142.1 70% 45%;
-  --neon-green-dark: 142.1 80% 25%;
-  --neon-green-glow: 142.1 76.2% 36.3%;
+  /* Deep blue variations (mantendo nomes para compatibilidade) */
+  --neon-green: 222 86% 55%;
+  --neon-green-light: 224 90% 63%;
+  --neon-green-dark: 222 80% 40%;
+  --neon-green-glow: 222 86% 55%;
 
   /* Gradients */
   --gradient-neon: linear-gradient(135deg, hsl(var(--neon-green)), hsl(var(--neon-green-light)));
@@ -46,12 +47,12 @@
   /* Sidebar */
   --sidebar-background: 0 0% 98%;
   --sidebar-foreground: 20 14.3% 4.1%;
-  --sidebar-primary: 142.1 76.2% 36.3%;
-  --sidebar-primary-foreground: 355.7 100% 97.3%;
-  --sidebar-accent: 210 40% 94%;
+  --sidebar-primary: 222 85% 45%;
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 217 32% 92%;
   --sidebar-accent-foreground: 222.2 84% 4.9%;
   --sidebar-border: 214.3 31.8% 91.4%;
-  --sidebar-ring: 142.1 76.2% 36.3%;
+  --sidebar-ring: 222 85% 45%;
   /* Font stacks */
   --font-system-apple: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
   --font-bottom-nav: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
@@ -72,35 +73,35 @@
   --card-foreground: 0 0% 95%;
   --popover: 0 0% 0%;
   --popover-foreground: 0 0% 95%;
-  --primary: 142.1 70.6% 45.3%;
-  --primary-foreground: 144.9 80.4% 10%;
-  --secondary: 215 27.9% 16.9%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 220 19% 18%;
   --secondary-foreground: 210 40% 98%;
-  --muted: 215 27.9% 16.9%;
+  --muted: 220 19% 18%;
   --muted-foreground: 217.9 10.6% 64.9%;
-  --accent: 215 27.9% 16.9%;
+  --accent: 220 19% 18%;
   --accent-foreground: 210 40% 98%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 210 40% 98%;
-  --border: 215 27.9% 16.9%;
-  --input: 215 27.9% 16.9%;
-  --ring: 142.1 70.6% 45.3%;
+  --border: 225 18% 22%;
+  --input: 225 18% 22%;
+  --ring: 217 91% 60%;
 
-  /* Neon green variations for dark mode */
-  --neon-green: 142.1 70.6% 45.3%;
-  --neon-green-light: 142.1 65% 55%;
-  --neon-green-dark: 142.1 75% 35%;
-  --neon-green-glow: 142.1 70.6% 45.3%;
+  /* Deep blue variations for dark mode (mantendo nomes) */
+  --neon-green: 217 91% 60%;
+  --neon-green-light: 220 95% 68%;
+  --neon-green-dark: 217 80% 48%;
+  --neon-green-glow: 217 91% 60%;
 
   /* Sidebar dark mode (preto) */
   --sidebar-background: 0 0% 0%;
   --sidebar-foreground: 0 0% 95%;
-  --sidebar-primary: 142.1 70.6% 45.3%;
-  --sidebar-primary-foreground: 144.9 80.4% 10%;
-  --sidebar-accent: 215 27.9% 16.9%;
+  --sidebar-primary: 217 91% 60%;
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 220 19% 18%;
   --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-border: 215 27.9% 16.9%;
-  --sidebar-ring: 142.1 70.6% 45.3%;
+  --sidebar-border: 225 18% 22%;
+  --sidebar-ring: 217 91% 60%;
 }
 
 /* Base Styles */
