@@ -87,37 +87,6 @@
     container.innerHTML = sections;
   }
 
-  async function renderBillingSection(){
-    try {
-      const profile = state.userProfile;
-      if (!profile?.banda_id) return;
-      const invoices = await window.utils.fetchBandInvoices(profile.banda_id, 3);
-      const host = document.querySelector('.page-header');
-      if (!host) return;
-      const html = `
-        <div class="card" style="margin-top:1rem;">
-          <div class="card-header"><h2 class="card-title">Faturas</h2></div>
-          <div class="card-content">
-            <ul class="list">
-              ${invoices.map(inv => `
-                <li class="list-item">
-                  <div class="list-item-content">
-                    <p class="list-item-title">${inv.month} ${inv.year}</p>
-                    <div class="list-item-meta"><span>Venc.: ${utils.formatDate(inv.due_date)}</span></div>
-                  </div>
-                  <div class="list-item-actions">
-                    ${String(inv.status).toLowerCase() === 'pago' ? '<span class="badge badge-usuario">Pago</span>' : '<span class="badge badge-admin">Pendente</span>'}
-                  </div>
-                </li>
-              `).join('')}
-            </ul>
-          </div>
-        </div>`;
-      host.insertAdjacentHTML('afterend', html);
-    } catch (e) {
-      console.warn('[billing] falha ao renderizar faturas', e);
-    }
-  }
 
   function applyBaseFilter(){
     state.filteredUsers = state.showDev ? state.users : state.users.filter(u => u.role !== 'dev');
@@ -440,7 +409,6 @@
       state.userProfile = userProfile;
       await loadUsers();
       updateStats();
-      renderBillingSection();
     },
 
     // ações expostas

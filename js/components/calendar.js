@@ -34,23 +34,23 @@ window.Calendar = {
         <div class="card-header">
           <div class="calendar-nav">
             <div class="calendar-nav-left">
-              <button class="btn btn-ghost" onclick="Calendar.navigateMonth(-1)">
+              <button class="btn calendar-arrow" onclick="Calendar.navigateMonth(-1)" aria-label="Mês anterior">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
               </button>
               <h2 id="calendar-title" class="calendar-title"></h2>
-              <button class="btn btn-ghost" onclick="Calendar.navigateMonth(1)">
+              <button class="btn calendar-arrow" onclick="Calendar.navigateMonth(1)" aria-label="Próximo mês">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
               </button>
             </div>
             <div class="calendar-nav-right">
-              <div class="btn-group">
-                <button class="btn ${this.view === 'month' ? 'btn-primary' : 'btn-outline'}" onclick="Calendar.setView('month')">Mês</button>
-                <button class="btn ${this.view === 'week' ? 'btn-primary' : 'btn-outline'}" onclick="Calendar.setView('week')">Semana</button>
-                <button class="btn ${this.view === 'day' ? 'btn-primary' : 'btn-outline'}" onclick="Calendar.setView('day')">Dia</button>
+              <div class="segmented" role="tablist" aria-label="Modo de visualização do calendário">
+                <button class="segmented-btn ${this.view === 'month' ? 'active' : ''}" data-cal-view="month" onclick="Calendar.setView('month')" role="tab" aria-selected="${this.view==='month'}">Mês</button>
+                <button class="segmented-btn ${this.view === 'week' ? 'active' : ''}" data-cal-view="week" onclick="Calendar.setView('week')" role="tab" aria-selected="${this.view==='week'}">Semana</button>
+                <button class="segmented-btn ${this.view === 'day' ? 'active' : ''}" data-cal-view="day" onclick="Calendar.setView('day')" role="tab" aria-selected="${this.view==='day'}">Dia</button>
               </div>
             </div>
           </div>
@@ -81,6 +81,9 @@ window.Calendar = {
     await this.loadShows();
     this.updateCalendarTitle();
     this.renderCalendar();
+    // Re-render em mudança de tamanho (mobile/desktop)
+    const onResize = utils.debounce(() => this.renderCalendar(), 200);
+    window.addEventListener('resize', onResize);
   },
 
   async loadShows() {
@@ -117,6 +120,13 @@ window.Calendar = {
     const grid = document.getElementById('calendar-grid');
     if (!grid) return;
 
+    // Mobile: lista vertical com data à esquerda e eventos à direita
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    if (isMobile) {
+      grid.innerHTML = this.renderMobileListView();
+      return;
+    }
+
     if (this.view === 'month') {
       grid.innerHTML = this.renderMonthView();
     } else if (this.view === 'week') {
@@ -124,6 +134,42 @@ window.Calendar = {
     } else {
       grid.innerHTML = this.renderDayView();
     }
+  },
+
+  renderMobileListView() {
+    // Lista todos os dias do mês; exibe eventos se existirem
+    const month = this.currentDate.getMonth();
+    const year = this.currentDate.getFullYear();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const monthDays = [];
+    for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+      const dateCopy = new Date(d);
+      const shows = this.getShowsForDate(dateCopy);
+      monthDays.push({ date: new Date(dateCopy), shows });
+    }
+    const monthsAbbr = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+    return `
+      <div class="cal-mobile-list">
+        ${monthDays.map(({date, shows}) => {
+          const isToday = date.toDateString() === new Date().toDateString();
+          return `
+          <div class="cal-mobile-row ${isToday ? 'is-today' : ''}">
+            <div class="cal-mobile-date">
+              <div class="day">${date.getDate()}</div>
+              <div class="mon">${monthsAbbr[date.getMonth()]}</div>
+            </div>
+            <div class="cal-mobile-events">
+              ${shows.map(s => {
+                const t = new Date(s.data_show).toTimeString().slice(0,5);
+                const title = utils.sanitizeInput(s.local || 'Show');
+                return `<div class=\"cal-mobile-event\"><span class=\"evt-title\">${title}</span><span class=\"evt-meta\">${t}</span></div>`;
+              }).join('')}
+            </div>
+          </div>
+          `;
+        }).join('')}
+      </div>`;
   },
 
   renderMonthView() {
@@ -312,9 +358,11 @@ window.Calendar = {
   setView(view) {
     this.view = view;
     this.renderCalendar();
-    // Update button states
-    document.querySelectorAll('.btn-group .btn').forEach(btn => {
-      btn.className = btn.onclick.toString().includes(`'${view}'`) ? 'btn btn-primary' : 'btn btn-outline';
+    // Atualiza controle segmentado
+    document.querySelectorAll('.segmented-btn').forEach(btn => {
+      const isActive = btn.getAttribute('data-cal-view') === view;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', String(isActive));
     });
   },
 

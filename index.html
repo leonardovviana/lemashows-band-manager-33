@@ -8,8 +8,8 @@
         <script>
             (function() {
                 try {
-                    var theme = localStorage.getItem('theme') || 'light';
-                    if (theme === 'dark') document.documentElement.classList.add('dark');
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
                 } catch (e) { /* ignore */ }
             })();
         </script>
@@ -39,9 +39,7 @@
                             <p class="text-xs text-muted-foreground">Gerenciamento</p>
                         </div>
                     </div>
-                    <button id="theme-toggle-btn" class="btn btn-sm btn-theme-toggle" aria-label="Alternar tema" title="Alternar tema">
-                        🌙 Tema
-                    </button>
+                    <!-- Botão de tema removido: tema fixo escuro -->
                 </div>
                 <div id="user-info" class="user-info">
                     <div class="user-avatar"><span id="user-initials" class="user-initials">U</span></div>
@@ -58,6 +56,7 @@
                         <li id="users-nav" class="hidden"><button class="nav-item" data-page="users">Usuários</button></li>
                         <li id="admin-nav" class="hidden"><button class="nav-item" data-page="admin">Admin</button></li>
                         <li><button class="nav-item" data-page="reports">Relatórios</button></li>
+                        <li id="payments-nav" class="hidden"><button class="nav-item" data-page="payments">Pagamentos</button></li>
                     </ul>
                 </nav>
                 <button id="logout-btn" class="logout-btn">Sair</button>
@@ -67,11 +66,54 @@
         <main class="main-content"><div id="page-content"></div></main>
         <!-- Mobile Bottom Navigation -->
         <nav id="mobile-nav" class="mobile-nav">
-            <button class="nav-item" data-page="dashboard" id="mobile-nav-dashboard">Dashboard</button>
-            <button class="nav-item" data-page="calendar" id="mobile-nav-calendar">Calendário</button>
-            <button class="nav-item hidden" data-page="users" id="mobile-nav-users">Usuários</button>
-            <button class="nav-item hidden" data-page="admin" id="mobile-nav-admin">Admin</button>
-            <button class="nav-item" data-page="reports" id="mobile-nav-reports">Relatórios</button>
+            <button class="nav-item" data-page="dashboard" id="mobile-nav-dashboard" aria-label="Dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 3h8v8H3zM13 3h8v5h-8zM13 10h8v11h-8zM3 13h8v8H3z"/>
+                </svg>
+                <span>Dashboard</span>
+            </button>
+            <button class="nav-item" data-page="calendar" id="mobile-nav-calendar" aria-label="Calendário">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>Calendário</span>
+            </button>
+            <button class="nav-item hidden" data-page="users" id="mobile-nav-users" aria-label="Usuários">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>Usuários</span>
+            </button>
+            <button class="nav-item hidden" data-page="admin" id="mobile-nav-admin" aria-label="Admin">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M9 12l2 2 4-4"/>
+                </svg>
+                <span>Admin</span>
+            </button>
+            <button class="nav-item" data-page="reports" id="mobile-nav-reports" aria-label="Relatórios">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 3v18h18"/>
+                    <rect x="7" y="12" width="3" height="6"/>
+                    <rect x="12" y="8" width="3" height="10"/>
+                    <rect x="17" y="5" width="3" height="13"/>
+                </svg>
+                <span>Relatórios</span>
+            </button>
+            <button class="nav-item hidden" data-page="payments" id="mobile-nav-payments" aria-label="Pagamentos">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="2" y="5" width="20" height="14" rx="2"/>
+                    <line x1="2" y1="10" x2="22" y2="10"/>
+                    <line x1="7" y1="15" x2="11" y2="15"/>
+                </svg>
+                <span>Pagamentos</span>
+            </button>
         </nav>
     </div>
 
@@ -88,6 +130,7 @@
     <script src="js/components/calendar.js"></script>
     <script src="js/components/users.js"></script>
     <script src="js/components/reports.js"></script>
+    <script src="js/components/payments.js"></script>
     <script src="js/components/admin.js"></script>
     <script src="js/app.js"></script>
     <script src="js/main.js"></script>

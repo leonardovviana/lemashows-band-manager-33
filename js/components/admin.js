@@ -61,7 +61,7 @@ window.Admin = {
     this.renderBands();
     this.renderUsers();
     this.applyFiltersToUI();
-    this.renderBillingForBands();
+    // resumo de faturas movido para a aba Pagamentos
   },
 
   async refresh() {
@@ -133,33 +133,6 @@ window.Admin = {
       </div>`;
   },
 
-  async renderBillingForBands() {
-    const container = document.getElementById('admin-bands-list');
-    if (!container || this.bands.length === 0) return;
-    try {
-      // Render um sumário logo após a lista de bandas
-      const summaries = await Promise.all(this.bands.map(async b => {
-        const invoices = await utils.fetchBandInvoices(b.id, 3);
-        const summary = invoices.map(inv => {
-          const s = String(inv.status).toLowerCase() === 'pago' ? 'Pago' : 'Pendente';
-          return `${inv.month} ${inv.year}: ${s}`;
-        }).join(' • ');
-        return `<li><strong>${utils.sanitizeInput(b.nome)}:</strong> ${summary || 'Sem faturas'}</li>`;
-      }));
-      const html = `
-        <div class="card" style="margin-top:1rem;">
-          <div class="card-header"><h2 class="card-title">Faturas por Banda (últimos meses)</h2></div>
-          <div class="card-content">
-            <ul class="list" style="gap:.25rem;">
-              ${summaries.map(s => `<li class="list-item" style="padding:.5rem 0; border:none; background:transparent;">${s}</li>`).join('')}
-            </ul>
-          </div>
-        </div>`;
-      container.insertAdjacentHTML('afterend', html);
-    } catch (e) {
-      console.warn('[billing] falha ao listar faturas', e);
-    }
-  },
 
   renderUsers() {
     const el = document.getElementById('admin-users-list');

@@ -51,7 +51,7 @@ async function initializeApp() {
     // Initialize UI
     setupSidebar();
     setupNavigation();
-  setupThemeToggle();
+  // Tema fixo escuro, sem alternância
     updateUserInfo();
     
     // Load initial page
@@ -193,8 +193,10 @@ function setupNavigation() {
   // Mobile nav availability mirrors sidebar permissions
   const mobileUsers = document.getElementById('mobile-nav-users');
   const mobileAdmin = document.getElementById('mobile-nav-admin');
+  const mobilePayments = document.getElementById('mobile-nav-payments');
   if (mobileUsers) mobileUsers.classList.toggle('hidden', !utils.canManageShows(currentProfile?.role));
   if (mobileAdmin) mobileAdmin.classList.toggle('hidden', currentProfile?.role !== 'dev');
+  if (mobilePayments) mobilePayments.classList.toggle('hidden', !utils.canManageShows(currentProfile?.role));
 }
 
 function setupThemeToggle() {
@@ -241,14 +243,20 @@ function updateUserInfo() {
   // Show/hide users nav for admins and devs
   const usersNav = document.getElementById('users-nav');
   const adminNav = document.getElementById('admin-nav');
+  const paymentsNav = document.getElementById('payments-nav');
   const mobileUsers = document.getElementById('mobile-nav-users');
   const mobileAdmin = document.getElementById('mobile-nav-admin');
+  const mobilePayments = document.getElementById('mobile-nav-payments');
   if (utils.canManageShows(currentProfile.role)) {
     usersNav.classList.remove('hidden');
+    if (paymentsNav) paymentsNav.classList.remove('hidden');
     if (mobileUsers) mobileUsers.classList.remove('hidden');
+    if (mobilePayments) mobilePayments.classList.remove('hidden');
   } else {
     usersNav.classList.add('hidden');
+    if (paymentsNav) paymentsNav.classList.add('hidden');
     if (mobileUsers) mobileUsers.classList.add('hidden');
+    if (mobilePayments) mobilePayments.classList.add('hidden');
   }
   if (currentProfile.role === 'dev') {
     adminNav.classList.remove('hidden');
@@ -286,6 +294,15 @@ async function loadPage(page) {
       case 'reports':
         pageContent.innerHTML = await window.Reports.render(currentProfile);
         window.Reports.init(currentProfile);
+        break;
+      case 'payments':
+        if (utils.canManageShows(currentProfile?.role)) {
+          pageContent.innerHTML = await window.Payments.render(currentProfile);
+          window.Payments.init(currentProfile);
+        } else {
+          utils.showToast('Acesso negado', 'Você não tem permissão para acessar esta página', 'error');
+          setTimeout(() => loadPage('dashboard'), 800);
+        }
         break;
       case 'admin':
         if (currentProfile.role === 'dev') {

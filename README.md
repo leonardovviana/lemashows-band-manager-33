@@ -94,28 +94,11 @@ Se algo ficar preso em "Carregando":
 
 ---
 
-## Informações Originais (Lovable)
-O projeto foi inicialmente criado via Lovable (Vite + React + Tailwind + shadcn-ui). Mantida a referência abaixo:
+## Como editar este código?
 
-**URL (Lovable)**: https://lovable.dev/projects/24d2340a-b1e6-41a3-bf6d-b301f3a7ea41
+Edite localmente usando sua IDE preferida (VS Code, WebStorm, etc.). É necessário ter Node.js & npm instalados – veja [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/24d2340a-b1e6-41a3-bf6d-b301f3a7ea41) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Siga estes passos:
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
@@ -131,19 +114,7 @@ npm i
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Você também pode editar diretamente no GitHub (botão de lápis) ou usar GitHub Codespaces para um ambiente de desenvolvimento na nuvem.
 
 ## Tecnologias (Modo Simples Atual)
 - HTML / CSS / JS vanilla
@@ -161,4 +132,4 @@ npm run dev
 Basta publicar o conteúdo estático (GitHub Pages, Vercel, Netlify, etc.). Certifique-se de expor somente a chave pública do Supabase (já é a anon key).
 
 ## Domínio Customizado
-Se usar Vercel/Netlify, adicione o domínio no painel deles. Para Lovable siga a docs original se optar pelo fluxo React hospedado lá.
+Se usar Vercel/Netlify, adicione o domínio no painel deles.
